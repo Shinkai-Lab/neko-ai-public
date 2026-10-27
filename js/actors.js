@@ -1,8 +1,8 @@
 // 箱庭の中の、猫のほかの住人: 近づいてくる相手(鶏・犬や獣・子ども・大人・よその猫・カラス)、同居の猫 2 匹、ごはんの人。
 // 位置は sim.js の状態(env.approach / env.hm_xy / env.hu_xy)から。見た目だけ(物理は sim.js)。
 import * as THREE from "three";
-import { createNekoMesh } from "../neko-argon/neko-argon.js?v=bb61d06470";
-import { fitInPot, applyPotTilt, TAIL_POT } from "./catactor.js?v=bb61d06470";
+import { createNekoMesh } from "../neko-argon/neko-argon.js?v=a9e327c3f5";
+import { fitInPot, applyPotTilt, TAIL_POT } from "./catactor.js?v=a9e327c3f5";
 
 const mat = (c, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.9 }, o || {}));
 const INK = 0x3b3128;
