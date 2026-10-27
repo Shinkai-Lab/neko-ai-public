@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-DGZs2nQJ64jTlcHnPhP86d/Y8hvySoGaYCzLhAJxHkY='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="build" content="d7c098bfc5">
+<title>日々猫になる — 猫の観察ノート</title>
+<meta name="description" content="猫のAIを作っています。猫の次の行動は、学習した小さなニューラルネットが選びます。ここにいる猫は録画ではなく、あなたのブラウザの中で、いま考えて、いま動いています。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@500;700&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/diary.css?v=d7c098bfc5">
+</head>
+<body>
+<div class="paper"></div>
+<div class="page">
+<header class="masthead">
+  <div class="mast-l">
+    <div class="eyebrow">観察ノート</div>
+    <h1>日々猫になる</h1>
+  </div>
+  <div class="mast-r">
+    <div class="stamp" id="obsNo">観察記録 No.----</div>
+    <div class="date" id="todayDate"></div>
+  </div>
+</header>
+
+<section class="intro sheet">
+  <p>猫の AI を作っています。猫の次の行動は、学習した小さなニューラルネットが選びます。教えたのは行動の台本ではなく、体(お腹が減る、寒い、眠い、くさい、怖い)と、世界(皿、土鍋、紙袋、本棚、縁側、季節と時刻)、そして「不快が減ったらごほうび」という一つの決まりです。一部の版では、それに加えて生まれつきの行動の傾き(たとえば「ごはん皿の近くでは出したくない」)や、予想が当たる・外れることへの内側のごほうびを置いています。どの版に何があるかは、版の札に書いてあります。</p>
+  <p>ここにいる猫は録画ではありません。<mark>あなたのブラウザの中で、いま考えて、いま動いています。</mark>同じ版でも、引数のない URL で開くたびに違う一日になります。</p>
+  <p>画面の猫の姿勢や動き(鍋で丸まる、皿の前で待つ、伸びをする、寒い時の香箱)は、選ばれた行動と体の状態を、見て分かる猫の姿に写した表示の規則です。心が選んだのは「どの手を打つか」で、その手をどう描くかは私たちが決めています。</p>
+</section>
+
+<div id="live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<main class="spread">
+  <figure class="fig">
+    <div id="stage" class="stage" tabindex="0" role="group" aria-label="猫の箱庭(3D)。矢印キーで視点を回す、プラスとマイナスで寄る・引く">
+      <div id="labels" class="labels"></div>
+      <div id="clockChip" class="clock-chip"></div>
+      <div class="cam-btns">
+        <button id="camFollow" class="chip on" title="猫を追う(f)" aria-pressed="true">猫を追う</button>
+        <button id="camWide" class="chip" title="家ぜんぶ(w)" aria-pressed="false">全景</button>
+        <button id="noteToggle" class="chip on" title="手書きの注記" aria-pressed="true">注記</button>
+      </div>
+      <div id="toast" class="toast"></div>
+      <div id="loading" class="loading" role="status">猫を呼んでいます…</div>
+    </div>
+    <figcaption id="caption" class="caption"></figcaption>
+    <p class="count-note" id="countNote"><b>見ている猫と札の数</b> 画面に出ているのは、一匹の猫です。その心は、その版の学習の種 0 で育てた一つの心です。札に書いてある数(「14 回/日」「85〜98%」など)は三つの層の集計で、①学習の種を 3〜4 つ変えて育てた複数の心、②それぞれを何百匹かの猫に写して何日か暮らさせた評価、③版によっては比べるための別の腕(人が応えない世界など)、を合わせた物です。目の前の一匹が札の通りに動くとは限りません。</p>
+    <div class="band-wrap">
+      <canvas id="band" width="1440" height="64" role="img" aria-label="今日の行動の帯(0 時から 24 時)。下の文に、行動ごとの時間を書いてあります"></canvas>
+      <p id="bandText" class="sr-only"></p>
+      <div class="band-axis"><span>0</span><span>6</span><span>12</span><span>18</span><span>24 時</span></div>
+      <div id="eventsStrip" class="events-strip"></div>
+    </div>
+    <div class="controls">
+      <div class="speed" role="group" aria-label="速さ" title="1 倍は猫の時間のまま(一日 24 時間)。60 倍で一日 24 分、144 倍で 10 分、288 倍で 5 分。眺めるなら 60 倍、結果だけ見たいなら 288 倍。">
+        <span class="lab">速さ</span>
+        <button class="sp on" data-mult="1" aria-pressed="true" aria-keyshortcuts="1">1 倍</button>
+        <button class="sp" data-mult="60" aria-pressed="false" aria-keyshortcuts="2">60 倍</button>
+        <button class="sp" data-mult="144" aria-pressed="false" aria-keyshortcuts="3">144 倍</button>
+        <button class="sp" data-mult="288" aria-pressed="false" aria-keyshortcuts="4">288 倍</button>
+      </div>
+      <div class="ctl-r">
+        <button id="pause" class="btn" aria-pressed="false" aria-keyshortcuts="Space">ひとやすみ</button>
+        <button id="skipDay" class="btn" title="この日を一気に進める(結果だけ見る)">この日を飛ばす</button>
+        <label class="check mini" title="入れない(既定)と、リンクを開いた人にはおまかせの名前が付きます"><input type="checkbox" id="shareName"> 名前も入れる</label>
+        <button id="shareBtn" class="btn" title="この猫のこの時刻を、リンクにする">リンクをコピー</button>
+        <button id="jsonBtn" class="btn" title="今日の記録を JSON で保存">記録(JSON)</button>
+      </div>
+      <p class="share-note fine" id="shareNote" hidden>この先は同じ時刻にはそろいません(一日の終わりの時刻で開きます)。</p>
+      <p class="share-note fine">リンクは同じ猫の同じ時刻を再現します(1440 ティック、2 日分まで)。名前(選んだ時)と片づけ・おやつの記録は # の後ろに入ります。サーバーには送られませんが、ブラウザの履歴には残ります。</p>
+    </div>
+    <p class="speed-note" id="speedNote">1 倍は猫の時間のまま(一日 24 時間)。60 倍で一日 24 分、144 倍で 10 分、288 倍で 5 分。眺めるなら 60 倍、結果だけ見たいなら 288 倍。箱庭の光は猫の時刻に合わせて変わります(朝の白い光、昼、夕方の橙、夜は月明かりの青い光と、ストーブと行灯)。</p>
+  </figure>
+
+  <aside class="notes">
+    <section class="sheet cat-card" id="catCard">
+      <div class="cat-top">
+        <div>
+          <div class="cat-name" id="catName">—</div>
+          <div class="cat-sub" id="catSub"></div>
+        </div>
+        <button id="rebirth" class="btn small" title="模様・しっぽ・名前を選んで、新しい猫を生まれさせる(b)" aria-keyshortcuts="b">生まれさせる</button>
+      </div>
+      <div class="ver-pick">
+        <label for="verSel">版(バックナンバー)</label>
+        <select id="verSel"></select>
+      </div>
+      <p class="ver-line" id="verLine"></p>
+      <details class="ver-more"><summary>この版のくわしく</summary>
+        <div id="verStat"></div>
+        <div class="kv"><b>入った物</b><span id="verAdded"></span></div>
+        <div class="kv"><b>出た癖</b><span id="verQuirk"></span></div>
+        <div class="kv small" id="verNote"></div>
+      </details>
+    </section>
+
+    <section class="sheet">
+      <h2>体 <small>体の内側の主な状態</small></h2>
+      <div class="bars" id="bars"></div>
+      <details class="bar-help"><summary>それぞれの数</summary>
+        <p>猫の心が受け取る観測には、ここに出す体の状態のほかに、いる場所と高さ、まわりの匂い、近づいてくるもの、人の物音、少し前の記憶なども入っています。バーに出すのは体の内側の主なものだけです。</p>
+        <ul>
+          <li><b>胃</b> 胃の空き。食べるとすぐ楽になる。</li>
+          <li><b>体</b> 体のエネルギーの不足。ゆっくり増え、ゆっくり減る。これが本当の空腹。</li>
+          <li><b>渇き / 膀胱 / 腸</b> 飲むと膀胱が、食べると腸が溜まる。満ちきるとその場で出る。</li>
+          <li><b>体感の温度</b> 場所の温度と、囲いと、自分の熱で決まる(体の芯の温度ではない)。</li>
+          <li><b>疲れ / 眠気</b> 動くと疲れ、起きていると眠くなる。</li>
+          <li><b>汚れ</b> 毛づくろいで減る。排せつの汚れは別の数で、落ちにくい。</li>
+          <li><b>不安</b> 開けた場所と、近づいてくるもので上がる。囲いで下がる。(公開している版では、高さは不安に直接は効かない。新しい物もそれだけでは不安を上げない。)</li>
+          <li><b>鼻</b> いまいる場所の匂い(自分の排せつも)。</li>
+          <li><b>脂肪</b> 食べ過ぎると増え、足りないと減る。冬を越す蓄え。</li>
+        </ul>
+        <p>どの数にも「このへんが楽」があり、そこからのずれが不快です。</p>
+      </details>
+    </section>
+
+    <section class="sheet why">
+      <h2>今選びそうな手</h2>
+      <div id="whyNow" class="why-now"></div>
+      <ol id="whyLog" class="why-log"></ol>
+      <p class="fine">猫の心が次の一手を選ぶ時の、候補の手と、それぞれを選ぶ確率、いま一番大きい不快を出しています。「皿へ歩く 62% / 座る 21% / 毛づくろい 9%。一番大きい不快は『体』」のように。これは心の中の数をそのまま見せているもので、選んだ理由の因果の説明ではありません。</p>
+    </section>
+
+    <section class="sheet hands">
+      <h2>手</h2>
+      <div class="hand-btns">
+        <button id="petBtn" class="btn">撫でる</button>
+        <button id="tidyBtn" class="btn">うんちを片づける</button>
+        <button id="snackBtn" class="btn">おやつ</button>
+      </div>
+      <label class="check"><input type="checkbox" id="clickTidy"> 床をクリックして、そのマスを片づける</label>
+      <ul class="hand-notes">
+        <li><b>撫でる</b> まだ効きません。猫の体に触覚と「慣れた相手といると落ち着く」が入っていないので、撫でても何も変わりません。人間の満足のための機能です。入ったら、ここに書き直します。</li>
+        <li><b>うんちを片づける</b> 効きます。その場所の匂いと汚れが消えます。</li>
+        <li><b>おやつ</b> 皿に一口分の食べ物が足されます。効くのは皿の中身がある版(x12b・x12c)だけで、置き餌の版では何も変わりません。</li>
+      </ul>
+    </section>
+
+    <section class="sheet events-card">
+      <h2>今日の出来事</h2>
+      <ul id="todayEvents" class="today-events"></ul>
+      <div class="tally" id="tally"></div>
+    </section>
+  </aside>
+</main>
+</div>
+<noscript><p class="fine" style="margin:20px">この頁は JavaScript で動きます。有効にしてお試しください。</p></noscript>
+
+<section class="backnumbers">
+  <h2>バックナンバー <small>昔の版の猫を、同じ家に連れてこられます</small></h2>
+  <p class="fine">昔の版の猫を連れてこられます。版を選ぶと、家もその実験の世界に変わります(版によっては家の並べや物も変わります)。寝床で排せつする子、巣を移して回る子、皿のそばでは出さなくなった子、高い所を使わない子、おもちゃで遊ぶ子、人に鳴く子。各版に、何を足して何が分かったかの一行があります。版は実験の番号で、数は実験の記録のままです。note の連載で扱った版には、記事への入口を付けていきます(連載: <a href="https://note.com/aohama_ai" rel="noopener noreferrer">note.com/aohama_ai</a>)。</p>
+  <div id="backnums" class="backnums"></div>
+</section>
+
+<footer class="foot">
+  <ul>
+    <li>これは本物の猫ではありません。猫らしく見えた所も、見えなかった所も、全部そのまま出しています。</li>
+    <li>行動の台本を書いて直すことはしていません。出なかった物は、体か世界を疑います。物理では出なかった所に、本物の猫の生まれつきの傾きを置いた版(x08)と、予想の内側のごほうびを置いた版(x11 以降)があり、それは版の札に書いてあります。</li>
+    <li>日々の記録と失敗は、note「青浜町広報」の連載 nekoAI に書いています: <a href="https://note.com/aohama_ai" rel="noopener noreferrer">https://note.com/aohama_ai</a>(記事が出た版から順に、札に入口を付けます)。</li>
+    <li>心と世界の作りは公開しています(<a href="https://github.com/Shinkai-Lab/neko-ai-public" rel="noopener noreferrer">repo</a>)。壁・色・影・猫と物の形は飾りで、物理には関係しません。物理は <code>js/sim.js</code>(Python の sim.py の写し。同じ種・同じ手で同じ数を返すことを確かめてあります)、心は <code>js/mind.js</code>(学習済みの小さな網の前向き計算)です。</li>
+    <li>コードは MIT、学習した心と世界の設定は CC BY 4.0。</li>
+  </ul>
+  <div class="privacy" id="privacy">
+    <h3>プライバシー</h3>
+    <p>この頁が覚える物は三つに分かれます。</p>
+    <ul>
+      <li><b>この端末の中(localStorage)</b>: 選んだ猫の見た目と名前。他の人には届きません。消すには頁の「猫を消す」を押すか、ブラウザのこのサイトのデータを消してください。</li>
+      <li><b>URL</b>: 版・種・時刻・見た目は URL に入ります(ブラウザの履歴にも残ります)。名前は、あなたが「名前も入れる」を選んだ時だけ、URL の # の後ろに入ります(# の後ろはサーバへは送られません)。共有リンクを渡すと、その相手には届きます。</li>
+      <li><b>保存した記録(JSON)</b>: 「記録(JSON)」で落とすファイルには、その日の猫の記録と、名前を入れると選んだ時だけ名前が入ります。</li>
+    </ul>
+    <p>外への通信は、Google Fonts(文字の書体)の読み込みだけです。3D の部品(three.js)は、この頁と一緒に置いてあります。</p>
+    <button id="forgetBtn" class="btn small">猫を消す</button>
+  </div>
+</footer>
+
+<dialog id="birth" class="birth" aria-labelledby="birthTitle">
+  <form method="dialog" id="birthForm">
+    <h2 id="birthTitle">生まれさせる</h2>
+    <p class="fine">模様としっぽを選んで、名前を付けてください(空なら適当に付きます)。中身はどの猫も同じ版の心ですが、乱数の種が違うので、同じ家で違う暮らしをします。</p>
+    <div class="birth-top"><canvas id="birthPreview" width="360" height="360" aria-label="猫の見本"></canvas>
+    <fieldset class="field"><legend class="lab">模様</legend><div id="coatList" class="coats"></div></fieldset></div>
+    <fieldset class="field"><legend class="lab">しっぽ</legend><div id="tailList" class="tails"></div></fieldset>
+    <div class="field"><label class="check"><input type="checkbox" id="socksChk"> 足先を白くする(靴下)</label></div>
+    <div class="field"><label class="lab" for="nameInp">名前</label><div class="name-row"><input id="nameInp" type="text" maxlength="12" placeholder="空ならおまかせ"><button type="button" id="rollName" class="btn small">ほかの名前</button></div></div>
+    <div class="field"><label class="lab" for="birthVer">版</label><select id="birthVer"></select></div>
+    <div class="row-end"><button type="button" id="birthCancel" class="btn small">やめる</button><button type="submit" id="bornBtn" class="btn primary">生まれる</button></div>
+  </form>
+</dialog>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js?v=d7c098bfc5" } }
+</script>
+<script src="js/guard.js?v=d7c098bfc5"></script>
+<script src="js/rng.js?v=d7c098bfc5"></script>
+<script src="js/consts.js?v=d7c098bfc5"></script>
+<script src="js/world_events.js?v=d7c098bfc5"></script>
+<script src="js/approach.js?v=d7c098bfc5"></script>
+<script src="js/sim.js?v=d7c098bfc5"></script>
+<script src="js/mind.js?v=d7c098bfc5"></script>
+<script type="module" src="js/app.js?v=d7c098bfc5"></script>
+</body>
+</html>
