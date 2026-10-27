@@ -1,12 +1,12 @@
 // 日々猫になる。ブラウザの中で、学習済みの心(js/mind.js)が世界(js/sim.js)の中で自分で考えて動く。
 // 見た目: 箱庭(js/diorama.js)・Argon の猫(neko-argon/、js/catactor.js が動きにつなぐ)・研究日誌の頁(css/diary.css)。
 import * as THREE from "three";
-import { createDiorama, CELL } from "./diorama.js?v=81141d1e75";
-import { CatActor } from "./catactor.js?v=81141d1e75";
-import { Extras } from "./actors.js?v=81141d1e75";
-import { PetHand } from "./hand.js?v=81141d1e75";
-import { createNekoMesh } from "../neko-argon/neko-argon.js?v=81141d1e75";
-import { NAMES, randomName, COATS, TAILS } from "./names.js?v=81141d1e75";
+import { createDiorama, CELL } from "./diorama.js?v=e15505ad49";
+import { CatActor } from "./catactor.js?v=e15505ad49";
+import { Extras } from "./actors.js?v=e15505ad49";
+import { PetHand } from "./hand.js?v=e15505ad49";
+import { createNekoMesh } from "../neko-argon/neko-argon.js?v=e15505ad49";
+import { NAMES, randomName, COATS, TAILS } from "./names.js?v=e15505ad49";
 
 const Neko = window.Neko, NekoRng = window.NekoRng;
 const C = Neko.consts;
@@ -242,8 +242,9 @@ const BARS = [
   { id: "pain", label: "痛み", get: (e) => e.st[13], cls: "warn", show: (e) => e.catch_on },
   { id: "theta", label: "体感の温度", get: (e) => (e.st[3] - 28) / 14, cls: "", fmt: (e) => e.st[3].toFixed(1) + "℃", wide: true, band: true },
 ];
+const MAIN_BARS = new Set(["gate", "stomach", "energy", "sleepy", "unsafe", "fatigue", "dirt", "theta"]);   // 狭い画面で見せる主な 8 つ(あとは「それぞれの数」を開くと)
 function buildBars() {
-  $("bars").innerHTML = BARS.map((b) => `<div class="bar ${b.wide ? "wide" : ""}" id="bw_${b.id}"><div class="lab"><span>${b.label}</span><em id="bv_${b.id}"></em></div><div class="track">${b.band ? '<div class="band" id="bb_theta"></div>' : ""}<div class="fill ${b.cls}" id="bf_${b.id}"></div></div></div>`).join("");
+  $("bars").innerHTML = BARS.map((b) => `<div class="bar ${b.wide ? "wide" : ""} ${MAIN_BARS.has(b.id) ? "m" : ""}" id="bw_${b.id}"><div class="lab"><span>${b.label}</span><em id="bv_${b.id}"></em></div><div class="track">${b.band ? '<div class="band" id="bb_theta"></div>' : ""}<div class="fill ${b.cls}" id="bf_${b.id}"></div></div></div>`).join("");
 }
 function updateBars() {
   const env = S.env; if (!env) return;
@@ -292,7 +293,7 @@ function updateClock() {
   const s0 = env.cfg.weather.season[0], s1 = env.cfg.weather.season[1]; const u = (env.season - s0) / (s1 - s0);
   const sname = u < 0.3 ? "冬" : (u < 0.7 ? "春・秋" : "夏");
   const day = Math.floor(env.t / env.T_day) + 1;
-  $("clockChip").innerHTML = `<b>${fmtH(env.hour())}</b>　${env.clear ? "晴れ" : "曇り"}　${sname}　<small>暮らし ${day}/${env.ep_days} 日目${env.cl_wx ? `　${(Tm + amp).toFixed(0)}/${(Tm - amp).toFixed(0)}℃` : ""}</small>`;
+  $("clockChip").innerHTML = `<b>${fmtH(env.hour())}</b>　${env.clear ? "晴れ" : "曇り"}　${sname}　<small><span class="cd">暮らし ${day}/${env.ep_days} 日目</span>${env.cl_wx ? `　${(Tm + amp).toFixed(0)}/${(Tm - amp).toFixed(0)}℃` : ""}</small>`;
   const top = (o, n) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${esc(k)} ${v}`).join("、") || "—";
   $("tally").innerHTML = `<b>寝た場所</b>(ティック) ${top(S.tallySleep, 3)}<br><b>出した場所</b>(回) ${top(S.tallyElim, 4)}` + (env.voice_on ? `<br><b>鳴いた</b> 今日 ${S.meowDay} 回 / この暮らし ${S.meowTotal} 回` : "") + `<br><b>食べた</b> ${S.eatBites} 口`;
   const place = placeAt(env, env.layer, env.x, env.y);
@@ -432,6 +433,13 @@ $("noteToggle").addEventListener("click", () => { S.notes = !S.notes; $("noteTog
 $("forgetBtn").addEventListener("click", () => { try { localStorage.removeItem("hibineko.look"); } catch (e) {} toast("この端末に保存していた猫の見た目と名前を消しました(いま画面にいる猫は、頁を閉じるまで残ります)"); });
 $("shareName").addEventListener("change", () => { S.shareName = $("shareName").checked; syncUrl(); });
 $("verSel").addEventListener("change", (e) => switchVersion(e.target.value));
+// 狭い画面: 体の数は主な 8 つだけ(「それぞれの数」を開くと全部)。「今選びそうな手」は一位だけ(押すと上位 3 つと一番大きい不快)
+document.querySelector(".bar-help").addEventListener("toggle", (e) => $("bars").classList.toggle("all", e.target.open));
+{ const w = $("whyNow"), box = w.closest(".why"), mq = matchMedia("(max-width: 600px)");
+  const sync = () => { if (mq.matches) { w.setAttribute("role", "button"); w.tabIndex = 0; w.setAttribute("aria-expanded", String(box.classList.contains("open"))); w.setAttribute("aria-label", "今選びそうな手(押すと上位 3 つが開く)"); } else { w.removeAttribute("role"); w.removeAttribute("tabindex"); w.removeAttribute("aria-expanded"); w.removeAttribute("aria-label"); } };
+  const flip = () => { if (!mq.matches) return; box.classList.toggle("open"); sync(); };
+  w.addEventListener("click", flip); w.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
+  mq.addEventListener("change", sync); sync(); }
 $("rebirth").addEventListener("click", openBirth); $("starveBtn").addEventListener("click", openBirth);
 $("petBtn").addEventListener("click", () => { if (S.hand && S.actor) S.hand.start(S.fakeNow != null ? S.fakeNow : performance.now()); toast("撫でました。まだ体に触覚が無いので、猫の気持ちは変わりません"); });   // 手は見た目だけ。猫の手(行動)にも姿勢にも触らず、共有の記録にも入れない
 $("tidyBtn").addEventListener("click", () => { const e = S.env; if (!e) return; e.tidyHere(); logIv("c", e.x, e.y); pushEvent("tidy", `うんちを片づけた(${placeAt(e, e.layer, e.x, e.y)})`); toast("その場所の匂いと汚れが消えました。猫はそこを「くさくない場所」として扱い直します。"); });

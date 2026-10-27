@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-16xVdtG340oi/bWlSZMYowxVAqznkmrnxufJzzD/ulU='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-0qYHQxUUUIjKysqpE+s2hjA/vknaRyl0Mxy2tijq0Tg='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
 <meta name="referrer" content="no-referrer">
-<meta name="build" content="81141d1e75">
+<meta name="build" content="e15505ad49">
 <title>日々猫になる — 猫の観察ノート</title>
 <meta name="description" content="猫のAIを作っています。猫の次の行動は、学習した小さなニューラルネットが選びます。ここにいる猫は録画ではなく、あなたのブラウザの中で、いま考えて、いま動いています。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@500;700&family=Zen+Kurenaido&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/diary.css?v=81141d1e75">
+<link rel="stylesheet" href="css/diary.css?v=e15505ad49">
 </head>
 <body>
 <div class="paper"></div>
@@ -40,9 +40,9 @@
       <div id="labels" class="labels"></div>
       <div id="clockChip" class="clock-chip"></div>
       <div class="cam-btns">
-        <button id="camFollow" class="chip on" title="猫を追う(f)" aria-pressed="true">猫を追う</button>
-        <button id="camWide" class="chip" title="家ぜんぶ(w)" aria-pressed="false">全景</button>
-        <button id="noteToggle" class="chip on" title="手書きの注記" aria-pressed="true">注記</button>
+        <button id="camFollow" class="chip on" title="猫を追う(f)" aria-label="猫を追う" aria-pressed="true"><span class="lg">猫を追う</span><span class="sh">追う</span></button>
+        <button id="camWide" class="chip" title="家ぜんぶ(w)" aria-label="全景" aria-pressed="false">全景</button>
+        <button id="noteToggle" class="chip on" title="手書きの注記" aria-label="注記" aria-pressed="true">注記</button>
       </div>
       <div id="toast" class="toast"></div>
       <div id="loading" class="loading" role="status">猫を呼んでいます…</div>
@@ -98,7 +98,7 @@
       </details>
     </section>
 
-    <section class="sheet">
+    <section class="sheet body-sheet">
       <h2>体 <small>体の内側の主な状態</small></h2>
       <p class="starve" id="starveNote" role="status" hidden>この猫は飢えています(本物の猫なら命が危ない)。この体は死ねないので、このまま動き続けます。やり直すなら<button type="button" class="inline-btn" id="starveBtn">「生まれさせる」</button>から。</p>
       <div class="bars" id="bars"></div>
@@ -192,15 +192,15 @@
 </dialog>
 
 <script type="importmap">
-{ "imports": { "three": "./vendor/three/three.module.min.js?v=81141d1e75" } }
+{ "imports": { "three": "./vendor/three/three.module.min.js?v=e15505ad49" } }
 </script>
-<script src="js/guard.js?v=81141d1e75"></script>
-<script src="js/rng.js?v=81141d1e75"></script>
-<script src="js/consts.js?v=81141d1e75"></script>
-<script src="js/world_events.js?v=81141d1e75"></script>
-<script src="js/approach.js?v=81141d1e75"></script>
-<script src="js/sim.js?v=81141d1e75"></script>
-<script src="js/mind.js?v=81141d1e75"></script>
-<script type="module" src="js/app.js?v=81141d1e75"></script>
+<script src="js/guard.js?v=e15505ad49"></script>
+<script src="js/rng.js?v=e15505ad49"></script>
+<script src="js/consts.js?v=e15505ad49"></script>
+<script src="js/world_events.js?v=e15505ad49"></script>
+<script src="js/approach.js?v=e15505ad49"></script>
+<script src="js/sim.js?v=e15505ad49"></script>
+<script src="js/mind.js?v=e15505ad49"></script>
+<script type="module" src="js/app.js?v=e15505ad49"></script>
 </body>
 </html>
