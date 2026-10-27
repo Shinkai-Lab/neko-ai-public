@@ -4,7 +4,7 @@
 
 - 頁: https://neko.shinkailab.com/
 - `index.html` `css/` `js/`: 頁と、猫の世界と体(`js/sim.js`)、心の前向き計算(`js/mind.js`)
-- `minds/`: 版ごとの学習した心の重み / `worlds/`: 版ごとの世界の設定 / `versions.json`: 版の一覧
+- `minds/`: 版ごとの学習した心の重み / `worlds/`: 版ごとの世界の設定 / `versions.json`: 版の一覧 / `notes.json`: note の記事の一覧(番号・題・URL)
 - 猫の 3D の姿: `neko-argon/neko-argon.js`
 - 3D の描画は three.js r170(`vendor/three/` に同梱、MIT。`vendor/three/LICENSE`)、書体は Google Fonts から読み込み(SIL OFL)
 - 乱数は NumPy の PCG64 と分布の一部を JavaScript に写したもの(`js/rng.js`。告知は `THIRD_PARTY_NOTICES`)
@@ -19,6 +19,6 @@
 
 ## ライセンス
 - コード(`index.html` `css/` `js/` `neko-argon/`): MIT(`LICENSE`)
-- 学習した心の重み・世界の設定・版の一覧(`minds/` `worlds/` `versions.json`): CC BY 4.0(`LICENSE-DATA`)
+- 学習した心の重み・世界の設定・版の一覧・記事の一覧(`minds/` `worlds/` `versions.json` `notes.json`): CC BY 4.0(`LICENSE-DATA`)
 
 © 2026 Shinkai Lab

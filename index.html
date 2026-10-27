@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-DGZs2nQJ64jTlcHnPhP86d/Y8hvySoGaYCzLhAJxHkY='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-16xVdtG340oi/bWlSZMYowxVAqznkmrnxufJzzD/ulU='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
 <meta name="referrer" content="no-referrer">
-<meta name="build" content="d7c098bfc5">
+<meta name="build" content="81141d1e75">
 <title>日々猫になる — 猫の観察ノート</title>
 <meta name="description" content="猫のAIを作っています。猫の次の行動は、学習した小さなニューラルネットが選びます。ここにいる猫は録画ではなく、あなたのブラウザの中で、いま考えて、いま動いています。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@500;700&family=Zen+Kurenaido&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/diary.css?v=d7c098bfc5">
+<link rel="stylesheet" href="css/diary.css?v=81141d1e75">
 </head>
 <body>
 <div class="paper"></div>
@@ -100,6 +100,7 @@
 
     <section class="sheet">
       <h2>体 <small>体の内側の主な状態</small></h2>
+      <p class="starve" id="starveNote" role="status" hidden>この猫は飢えています(本物の猫なら命が危ない)。この体は死ねないので、このまま動き続けます。やり直すなら<button type="button" class="inline-btn" id="starveBtn">「生まれさせる」</button>から。</p>
       <div class="bars" id="bars"></div>
       <details class="bar-help"><summary>それぞれの数</summary>
         <p>猫の心が受け取る観測には、ここに出す体の状態のほかに、いる場所と高さ、まわりの匂い、近づいてくるもの、人の物音、少し前の記憶なども入っています。バーに出すのは体の内側の主なものだけです。</p>
@@ -129,13 +130,12 @@
       <h2>手</h2>
       <div class="hand-btns">
         <button id="petBtn" class="btn">撫でる</button>
-        <button id="tidyBtn" class="btn">うんちを片づける</button>
+        <button id="tidyBtn" class="btn">猫のいる所を片づける</button>
         <button id="snackBtn" class="btn">おやつ</button>
       </div>
-      <label class="check"><input type="checkbox" id="clickTidy"> 床をクリックして、そのマスを片づける</label>
       <ul class="hand-notes">
         <li><b>撫でる</b> まだ効きません。猫の体に触覚と「慣れた相手といると落ち着く」が入っていないので、撫でても何も変わりません。人間の満足のための機能です。入ったら、ここに書き直します。</li>
-        <li><b>うんちを片づける</b> 効きます。その場所の匂いと汚れが消えます。</li>
+        <li><b>猫のいる所を片づける</b> 効きます。猫のいるマスの匂いと汚れが消えます。床のうんちそのものを押す(タップする)と、そのマスを片づけます。猫がいなくても片づきます。</li>
         <li><b>おやつ</b> 皿に一口分の食べ物が足されます。効くのは皿の中身がある版(x12b・x12c)だけで、置き餌の版では何も変わりません。</li>
       </ul>
     </section>
@@ -160,7 +160,7 @@
   <ul>
     <li>これは本物の猫ではありません。猫らしく見えた所も、見えなかった所も、全部そのまま出しています。</li>
     <li>行動の台本を書いて直すことはしていません。出なかった物は、体か世界を疑います。物理では出なかった所に、本物の猫の生まれつきの傾きを置いた版(x08)と、予想の内側のごほうびを置いた版(x11 以降)があり、それは版の札に書いてあります。</li>
-    <li>日々の記録と失敗は、note「青浜町広報」の連載 nekoAI に書いています: <a href="https://note.com/aohama_ai" rel="noopener noreferrer">https://note.com/aohama_ai</a>(記事が出た版から順に、札に入口を付けます)。</li>
+    <li>日々の記録と失敗は、note「青浜町広報」の連載 nekoAI に書いています: <a href="https://note.com/aohama_ai" rel="noopener noreferrer">https://note.com/aohama_ai</a>(記事が出た版から順に、札に入口を付けます)。<ul class="note-list" id="noteList"></ul></li>
     <li>心と世界の作りは公開しています(<a href="https://github.com/Shinkai-Lab/neko-ai-public" rel="noopener noreferrer">repo</a>)。壁・色・影・猫と物の形は飾りで、物理には関係しません。物理は <code>js/sim.js</code>(Python の sim.py の写し。同じ種・同じ手で同じ数を返すことを確かめてあります)、心は <code>js/mind.js</code>(学習済みの小さな網の前向き計算)です。</li>
     <li>コードは MIT、学習した心と世界の設定は CC BY 4.0。</li>
   </ul>
@@ -192,15 +192,15 @@
 </dialog>
 
 <script type="importmap">
-{ "imports": { "three": "./vendor/three/three.module.min.js?v=d7c098bfc5" } }
+{ "imports": { "three": "./vendor/three/three.module.min.js?v=81141d1e75" } }
 </script>
-<script src="js/guard.js?v=d7c098bfc5"></script>
-<script src="js/rng.js?v=d7c098bfc5"></script>
-<script src="js/consts.js?v=d7c098bfc5"></script>
-<script src="js/world_events.js?v=d7c098bfc5"></script>
-<script src="js/approach.js?v=d7c098bfc5"></script>
-<script src="js/sim.js?v=d7c098bfc5"></script>
-<script src="js/mind.js?v=d7c098bfc5"></script>
-<script type="module" src="js/app.js?v=d7c098bfc5"></script>
+<script src="js/guard.js?v=81141d1e75"></script>
+<script src="js/rng.js?v=81141d1e75"></script>
+<script src="js/consts.js?v=81141d1e75"></script>
+<script src="js/world_events.js?v=81141d1e75"></script>
+<script src="js/approach.js?v=81141d1e75"></script>
+<script src="js/sim.js?v=81141d1e75"></script>
+<script src="js/mind.js?v=81141d1e75"></script>
+<script type="module" src="js/app.js?v=81141d1e75"></script>
 </body>
 </html>

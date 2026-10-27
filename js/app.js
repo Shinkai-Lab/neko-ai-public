@@ -1,11 +1,12 @@
 // 日々猫になる。ブラウザの中で、学習済みの心(js/mind.js)が世界(js/sim.js)の中で自分で考えて動く。
 // 見た目: 箱庭(js/diorama.js)・Argon の猫(neko-argon/、js/catactor.js が動きにつなぐ)・研究日誌の頁(css/diary.css)。
 import * as THREE from "three";
-import { createDiorama, CELL } from "./diorama.js?v=d7c098bfc5";
-import { CatActor } from "./catactor.js?v=d7c098bfc5";
-import { Extras } from "./actors.js?v=d7c098bfc5";
-import { createNekoMesh } from "../neko-argon/neko-argon.js?v=d7c098bfc5";
-import { NAMES, randomName, COATS, TAILS } from "./names.js?v=d7c098bfc5";
+import { createDiorama, CELL } from "./diorama.js?v=81141d1e75";
+import { CatActor } from "./catactor.js?v=81141d1e75";
+import { Extras } from "./actors.js?v=81141d1e75";
+import { PetHand } from "./hand.js?v=81141d1e75";
+import { createNekoMesh } from "../neko-argon/neko-argon.js?v=81141d1e75";
+import { NAMES, randomName, COATS, TAILS } from "./names.js?v=81141d1e75";
 
 const Neko = window.Neko, NekoRng = window.NekoRng;
 const C = Neko.consts;
@@ -33,7 +34,7 @@ const ONE_SEC = 1000;
 
 // ------------------------------------------------------------ 状態
 const S = {
-  shareName: false, versions: [], ver: null, env: null, mind: null, actRng: null, seed: SEED0, look: { coat: "cha", tail: "long", socks: false, name: "" },
+  shareName: false, noteList: [], versions: [], ver: null, env: null, mind: null, actRng: null, seed: SEED0, look: { coat: "cha", tail: "long", socks: false, name: "" },
   mult: 1, paused: false, owed: 0, cfg: {}, minds: {}, cam: "follow", notes: true,
   band: new Uint8Array(720).fill(255), day: { events: [], trace: [] }, clockDay: -1, whyLog: [], prevAct: -1, lastEventTick: {}, lastPlace: "", tallySleep: {}, tallyElim: {}, meowDay: 0, meowTotal: 0, eatBites: 0,
   actor: null, dio: null, tickDur: 120, why: null, lastTickAt: 0, ready: false,
@@ -119,7 +120,7 @@ async function startLife(opts) {
   const lk = JSON.stringify([S.look.coat, S.look.tail, !!S.look.socks]);
   if (!S.actor) { S.actor = new CatActor(scene, S.dio, S.look); S.lookKey = lk; }
   else { S.actor.dio = S.dio; if (S.lookKey !== lk) { S.actor.setLook(S.look); S.lookKey = lk; } }
-  if (S.extras) S.extras.dispose(); S.extras = new Extras(scene, S.dio);
+  if (S.extras) S.extras.dispose(); S.extras = new Extras(scene, S.dio); if (!S.hand) S.hand = new PetHand(scene);
   buildLabels();
   resetDiary();
   // 共有リンクの時刻まで進める(同じ種・同じ心なら同じ一日)
@@ -246,6 +247,7 @@ function buildBars() {
 }
 function updateBars() {
   const env = S.env; if (!env) return;
+  { const starving = env.st[env.v3.two_layer ? 6 : 0] >= env.v2_safety - 1e-6 && (!env.fat_on || env.fat <= env.fat_lo + 1e-6 * env.fat_bw); const n = $("starveNote"); if (n.hidden === starving) n.hidden = !starving; }   // 体(不足)が上限に着き、脂肪が下限の間だけ
   for (const b of BARS) {
     const w = $("bw_" + b.id); const vis = b.show ? b.show(env) : true; w.style.display = vis ? "" : "none"; if (!vis) continue;
     const v = b.get(env); $("bf_" + b.id).style.width = (clamp(v, 0, 1) * 100).toFixed(0) + "%";
@@ -315,9 +317,16 @@ function statHtml(v) {
   if (!v.stat) return "";
   return `<div class="stat"><div class="st-t">${esc(v.stat.title)}</div>` + v.stat.bars.map((b) => `<div class="st-r"><span>${esc(b.label)}</span><i><u style="width:${(Math.max(1.5, Math.min(100, Number(b.v) / Number(b.max) * 100)) || 1.5).toFixed(1)}%"></u></i><em>${esc(b.text)}</em></div>`).join("") + "</div>";
 }
+// note の入口は web/notes.json 一か所(記事が出たら一行足す)。外へのリンクは note.com の https だけ通す
+const noteSafe = (u) => { const h = safeUrl(u); return /^https:\/\/note\.com\//.test(h) ? h : ""; };
+const noteHref = (v) => noteSafe(v.note_url) || noteSafe((S.noteList.find((n) => n.n === v.note) || {}).url);
+function buildNoteList() {
+  const ul = $("noteList"); if (!ul) return; ul.textContent = "";
+  for (const n of S.noteList) { const h = noteSafe(n.url); if (!h) continue; const li = el("li"); li.append(el("a", { href: h, rel: "noopener noreferrer", text: `${String(n.n).slice(0, 8)}${n.title ? " " + String(n.title).slice(0, 80) : ""}` })); ul.append(li); }
+}
 function buildVersionUI() {
   for (const id of ["verSel", "birthVer"]) { const sel = $(id); sel.textContent = ""; for (const v of S.versions) sel.append(el("option", { value: v.id, text: `${v.id}　${v.title}` })); }
-  $("backnums").innerHTML = S.versions.map((v) => `<article class="bn" data-id="${esc(v.id)}"><div><span class="id">${esc(v.id)}</span><span class="dt">${esc(v.date || "")}</span></div><h3>${esc(v.title)}</h3><p>${esc(v.line || v.summary)}</p>${statHtml(v)}<div class="go"><button class="btn small go-btn">この猫を部屋に連れてくる</button>${v.note ? `<span class="nt">note ${safeUrl(v.note_url) ? `<a href="${esc(safeUrl(v.note_url))}" rel="noopener noreferrer">${esc(v.note)}</a>` : esc(v.note)}</span>` : ""}</div></article>`).join("");
+  $("backnums").innerHTML = S.versions.map((v) => `<article class="bn" data-id="${esc(v.id)}"><div><span class="id">${esc(v.id)}</span><span class="dt">${esc(v.date || "")}</span></div><h3>${esc(v.title)}</h3><p>${esc(v.line || v.summary)}</p>${statHtml(v)}<div class="go"><button class="btn small go-btn">この猫を部屋に連れてくる</button>${v.note ? `<span class="nt">note ${noteHref(v) ? `<a href="${esc(noteHref(v))}" rel="noopener noreferrer">${esc(v.note)}</a>` : esc(v.note)}</span>` : ""}</div></article>`).join("");
   document.querySelectorAll(".bn .go-btn").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); const id = b.closest(".bn").dataset.id; switchVersion(id); window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" }); }));
 }
 function updateCanvasLabel(t) { const now = performance.now(); if (updateCanvasLabel.t && now - updateCanvasLabel.t < 8000) return; updateCanvasLabel.t = now; try { renderer.domElement.setAttribute("aria-label", "猫の箱庭(3D)。" + t); } catch (e) {} }
@@ -401,10 +410,10 @@ window.addEventListener("resize", resize); try { new ResizeObserver(() => resize
   });
   const up = (e) => {
     ptrs.delete(e.pointerId);
-    if (moved < 5 && $("clickTidy").checked && S.env) {
+    if (moved < 5 && S.env) {                                    // 床のうんち(塊)そのものを押したら、そのマスを片づける(猫がいなくてもよい)
       const r = cv.getBoundingClientRect(); const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-      const rc = new THREE.Raycaster(); rc.setFromCamera(ndc, camera); const hit = rc.intersectObjects(S.dio.tiles, false)[0];
-      if (hit) { S.env.tidyAt(hit.object.userData.x, hit.object.userData.y); logIv("c", hit.object.userData.x, hit.object.userData.y); pushEvent("tidy", `片づけた(${placeAt(S.env, FLOOR, hit.object.userData.x, hit.object.userData.y)})`); toast("そのマスの匂いと汚れが消えました"); }
+      const rc = new THREE.Raycaster(); rc.setFromCamera(ndc, camera); const cell = pickFeces(rc);
+      if (cell) { S.env.tidyAt(cell[0], cell[1]); logIv("c", cell[0], cell[1]); pushEvent("tidy", `片づけた(${placeAt(S.env, FLOOR, cell[0], cell[1])})`); toast("そのマスの匂いと汚れが消えました"); animateDio(performance.now() / 1000); }
     }
   };
   cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
@@ -423,8 +432,8 @@ $("noteToggle").addEventListener("click", () => { S.notes = !S.notes; $("noteTog
 $("forgetBtn").addEventListener("click", () => { try { localStorage.removeItem("hibineko.look"); } catch (e) {} toast("この端末に保存していた猫の見た目と名前を消しました(いま画面にいる猫は、頁を閉じるまで残ります)"); });
 $("shareName").addEventListener("change", () => { S.shareName = $("shareName").checked; syncUrl(); });
 $("verSel").addEventListener("change", (e) => switchVersion(e.target.value));
-$("rebirth").addEventListener("click", openBirth);
-$("petBtn").addEventListener("click", () => toast("まだ撫でられても何も感じません。猫の体に触覚と「慣れた相手といると落ち着く」が入っていないので、撫でても何も変わりません。人間の満足のための機能です。"));
+$("rebirth").addEventListener("click", openBirth); $("starveBtn").addEventListener("click", openBirth);
+$("petBtn").addEventListener("click", () => { if (S.hand && S.actor) S.hand.start(S.fakeNow != null ? S.fakeNow : performance.now()); toast("撫でました。まだ体に触覚が無いので、猫の気持ちは変わりません"); });   // 手は見た目だけ。猫の手(行動)にも姿勢にも触らず、共有の記録にも入れない
 $("tidyBtn").addEventListener("click", () => { const e = S.env; if (!e) return; e.tidyHere(); logIv("c", e.x, e.y); pushEvent("tidy", `うんちを片づけた(${placeAt(e, e.layer, e.x, e.y)})`); toast("その場所の匂いと汚れが消えました。猫はそこを「くさくない場所」として扱い直します。"); });
 $("snackBtn").addEventListener("click", () => { const e = S.env; if (!e) return; if (e.voice_on) { e.snackBowl(); logIv("s"); pushEvent("snack", "おやつ(皿に足した)"); toast(`皿に食べ物を足しました(いま皿に ${e.bowl_bites.toFixed(0)} 口)。置き餌ではないので、食べればなくなります。`); } else toast("この版の皿はいつも満ちていて、一口足しても変わりません(皿の中身が物理にあるのは x12b・x12c の版だけです)。"); });
 window.addEventListener("keydown", (e) => {
@@ -446,6 +455,7 @@ const REDUCED = (() => { try { return matchMedia("(prefers-reduced-motion: reduc
 function needSmooth(now) {
   if (REDUCED) return now - lastInput < 600;                      // 動きを減らす設定: 触っている間だけ滑らかに。あとは最小限の描画
   if (S.mult > 1 || now - lastInput < 1500) return true;
+  if (S.hand && S.hand.active) return true;
   const p = S.actor && S.actor.plan; if (p && now < p.t0 + p.dur + 400) return true;
   const e = S.env; if (e && (e.approach.active || (e.bird && S.cam === "follow"))) return true;
   return false;
@@ -481,6 +491,7 @@ function frame(now) {
     S.catTag.a.p.set(S.actor.cur.x, S.actor.cur.y + 0.55, S.actor.cur.z); if (S.catTag.el.textContent !== (S.look.name || "猫")) S.catTag.el.textContent = S.look.name || "猫";
     S.dio.setLight(env.hour(), env.clear, stoveOn(env));
     animateDio(now / 1000);
+    if (S.hand && S.hand.active) S.hand.update(now, S.actor);
     S.extras.update(S.paused ? 0.016 : dtR, now, env, camera.position, S.actor.cur, S.look.coat);
     if (!S.camLock) orbit.wantTarget.set(S.actor.cur.x, S.actor.cur.y + 0.3, S.actor.cur.z);       // camLock は検品用
     if (S.cam === "wide") orbit.wantTarget.copy(S.dio.center);
@@ -514,6 +525,15 @@ async function fastForward(n, iv) {
   }
   S.ivReplaying = false; S.booting = false;
 }
+// 光線が当たった「いま見えている便の塊」のマス(塊そのもの、なければ塊のあるマスの床)。無ければ null
+function pickFeces(rc) {
+  const d = S.dio.dyn, env = S.env; const vis = d.poop.filter((g) => g.visible);
+  const h = vis.length ? rc.intersectObjects(vis, true)[0] : null;
+  if (h) { let o = h.object; while (o && d.poop.indexOf(o) < 0) o = o.parent; const i = d.poop.indexOf(o); if (i >= 0) return [i % W, Math.floor(i / W)]; }
+  const t = rc.intersectObjects(S.dio.tiles, false)[0];
+  if (t && floorFeces(env, t.object.userData.x, t.object.userData.y) > 0.03) return [t.object.userData.x, t.object.userData.y];
+  return null;
+}
 function floorFeces(env, x, y) { return env.mess_f[idx3(FLOOR, y, x)]; }
 function animateDio(t) {
   const d = S.dio.dyn, env = S.env, dd = S.dio;
@@ -540,6 +560,8 @@ async function main() {
   try {
     const q = new URLSearchParams(location.search);
     S.versions = await getJSON("versions.json");
+    try { const nl = await getJSON("notes.json"); S.noteList = Array.isArray(nl) ? nl.filter((n) => n && typeof n.n === "string") : []; } catch (e) { S.noteList = []; }   // 無くても頁は動く
+    buildNoteList();
     buildVersionUI(); buildBars(); buildBirthUI(); setMult(1); resize();
     const vq = q.get("v"); const first = verOf(vq && vq.length <= 40 ? vq : "x12b");
     S.ver = first;

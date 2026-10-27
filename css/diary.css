@@ -247,3 +247,8 @@ fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; } fieldset.fiel
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto !important; } .loading.gone { transition: none; } }
 .backnumbers { overflow-x: clip; padding-left: 4px; padding-right: 4px; }
 html { overflow-x: clip; }
+
+.starve { margin: 6px 0 8px; padding: 7px 10px; font-size: 12.5px; line-height: 1.7; color: var(--ink); background: #f6e4d8; border: 1px solid #c98f6b; border-radius: 8px; }
+.starve[hidden] { display: none; }
+.inline-btn { font: inherit; color: var(--blue, #2f5d8a); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.note-list { margin: 6px 0 0; padding-left: 1.2em; } .note-list li { margin: 2px 0; }
