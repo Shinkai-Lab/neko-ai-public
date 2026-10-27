@@ -2,8 +2,8 @@
 // 瞬間移動しない: 歩く・登る・飛び降りる・入る・出るは、位置を持った動きにする。止まる手は仕草(食べる・毛づくろい・香箱・猫鍋で丸まる…)。
 // 物理にも心にも触らない。見た目だけ。
 import * as THREE from "three";
-import { createNekoMesh } from "../neko-argon/neko-argon.js?v=a9e327c3f5";
-import { CELL } from "./diorama.js?v=a9e327c3f5";
+import { createNekoMesh } from "../neko-argon/neko-argon.js?v=2eae5e3f36";
+import { CELL } from "./diorama.js?v=2eae5e3f36";
 
 const ease = (t) => t * t * (3 - 2 * t);
 const lerp = (a, b, t) => a + (b - a) * t;

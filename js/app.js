@@ -1,12 +1,12 @@
 // 日々猫になる。ブラウザの中で、学習済みの心(js/mind.js)が世界(js/sim.js)の中で自分で考えて動く。
 // 見た目: 箱庭(js/diorama.js)・Argon の猫(neko-argon/、js/catactor.js が動きにつなぐ)・研究日誌の頁(css/diary.css)。
 import * as THREE from "three";
-import { createDiorama, CELL } from "./diorama.js?v=a9e327c3f5";
-import { CatActor } from "./catactor.js?v=a9e327c3f5";
-import { Extras } from "./actors.js?v=a9e327c3f5";
-import { PetHand } from "./hand.js?v=a9e327c3f5";
-import { createNekoMesh } from "../neko-argon/neko-argon.js?v=a9e327c3f5";
-import { NAMES, randomName, COATS, TAILS } from "./names.js?v=a9e327c3f5";
+import { createDiorama, CELL } from "./diorama.js?v=2eae5e3f36";
+import { CatActor } from "./catactor.js?v=2eae5e3f36";
+import { Extras } from "./actors.js?v=2eae5e3f36";
+import { PetHand } from "./hand.js?v=2eae5e3f36";
+import { createNekoMesh } from "../neko-argon/neko-argon.js?v=2eae5e3f36";
+import { NAMES, randomName, COATS, TAILS } from "./names.js?v=2eae5e3f36";
 
 const Neko = window.Neko, NekoRng = window.NekoRng;
 const C = Neko.consts;
